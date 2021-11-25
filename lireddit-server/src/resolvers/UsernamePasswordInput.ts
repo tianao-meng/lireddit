@@ -8,9 +8,6 @@ export class UsernamePasswordInput {
     email: string;
 
     @Field()
-
-    
-
     username: string;
 
     @Field()
