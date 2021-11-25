@@ -1,0 +1,23 @@
+
+req.session.userId = user.id;
+
+1.
+
+{userId: 1} -> send that to redis, redis is a key-value store
+
+sdfasdfasf -> {userId: 1}
+
+2.
+
+express-session(middleware) will set a cookie on my browser ljljlkjlkjlj(cookie value(signed version of sdfasdfasf using secret), key is qid)
+
+3.
+when user make a request,ljljlkjlkjlj is sent to the server 
+
+4.
+decrypt the key(use the secret)
+ljljlkjlkjlj ->  sdfasdfasf 
+
+5.
+make a request to redis
+sdfasdfasf -> {userId: 1}
