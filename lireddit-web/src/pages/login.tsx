@@ -5,7 +5,7 @@ import Wrapper from '../components/Wrapper'
 import { InputField } from '../components/InputField'
 import { Box } from '@chakra-ui/layout'
 import { Button } from "@chakra-ui/react"
-import { useLoginMutation, useRegisterMutation } from '../generated/graphql'
+import { useLoginMutation} from '../generated/graphql'
 import { toErrorMap } from '../utils/toErrorMap'
 import { useRouter } from 'next/dist/client/router'
 import { createUrqlClient } from '../utils/createUrqlClient'
@@ -22,8 +22,9 @@ const Login: React.FC<{}> = ({}) => {
         return (   
                 <Wrapper variant="small">
 
-                        <Formik initialValues={{username: "", password: ""}} onSubmit={async (value ,{setErrors}) => {
-                                        const res = await login({options:value});
+                        <Formik initialValues={{usernameOrEmail: "", password: ""}} onSubmit={async (value ,{setErrors}) => {
+                                        console.log(value);
+                                        const res = await login(value);
                                         if(res.data?.login.errors) {
                                                 setErrors(toErrorMap(res.data.login.errors));
                                         } else if (res.data?.login.user){
@@ -33,7 +34,7 @@ const Login: React.FC<{}> = ({}) => {
                                 {
                                         ({isSubmitting}) => (
                                                 <Form>
-                                                        <InputField name= "username" label= "Username" placeholder= "username"/>
+                                                        <InputField name= "usernameOrEmail" label= "Username or Email" placeholder= "username or email"/>
                                                         <Box mt={4}>
                                                                 <InputField name= "password" label= "Password" placeholder= "password" type='password'/>
                                                         </Box>

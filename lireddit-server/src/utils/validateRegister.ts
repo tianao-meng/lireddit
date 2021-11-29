@@ -2,8 +2,7 @@ import { UsernamePasswordInput } from "src/resolvers/UsernamePasswordInput"
 
 export const validateRegister = (options : UsernamePasswordInput) => {
     if (!options.email.includes('@')) {
-        return 
-            [{
+            return [{
                 field: "email",
                 message: "invalid email"
             }]
@@ -11,8 +10,7 @@ export const validateRegister = (options : UsernamePasswordInput) => {
         
     }
     if (options.username.length <= 2) {
-        return 
-            [{
+            return [{
                 field: "username",
                 message: "username length must be greater than 2"
             }]
@@ -20,8 +18,7 @@ export const validateRegister = (options : UsernamePasswordInput) => {
         
     }
     if (options.username.includes('@')) {
-        return 
-            [{
+            return [{
                 field: "username",
                 message: "username cannot include @"
             }]
@@ -29,8 +26,7 @@ export const validateRegister = (options : UsernamePasswordInput) => {
         
     }
     if (options.password.length <= 2) {
-        return 
-            [{
+            return [{
                 field: "password",
                 message: "password length must be greater than 2"
             }]
