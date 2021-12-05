@@ -1,7 +1,7 @@
-import {MikroORM} from '@mikro-orm/core';
+import "reflect-metadata"
+
 import { __prod__ , COOKIE_NAME} from './constants';
-// import { Post } from './entities/Post';
-import microConfig from './mikro-orm.config'
+
 import express from 'express';
 import {ApolloServer} from 'apollo-server-express';
 import {buildSchema} from 'type-graphql';
@@ -14,13 +14,22 @@ import connectRedis from 'connect-redis';
 import { MyContext } from 'src/types';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import cors from 'cors';
+import {createConnection} from 'typeorm'
 import { User } from './entities/User';
-
+import { Post } from './entities/Post';
 
 const main = async () => {
-    //console.log(__dirname);
-    const orm = await MikroORM.init(microConfig);
-    await orm.getMigrator().up();
+    const conn = await createConnection({
+        type: 'postgres',
+        database: 'lireddit2',
+        username:'postgres',
+        password:'postgres',
+        logging:true,
+        synchronize:true,
+        entities:[Post, User]
+    });
+
+
     const app = express();
     const RedisStore = connectRedis(session)
     const redis = new Redis()
@@ -55,7 +64,7 @@ const main = async () => {
             validate:false,
         }),
         // context is a special object, that can be accessed by our resolvers
-        context:({req, res}): MyContext => ({em: orm.em, req, res, redis}),
+        context:({req, res}): MyContext => ({req, res, redis}),
         plugins: [
             ApolloServerPluginLandingPageGraphQLPlayground({
               // options

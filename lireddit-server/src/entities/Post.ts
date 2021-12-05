@@ -1,28 +1,47 @@
-import "reflect-metadata"
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+
 import { Field, ObjectType } from "type-graphql";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "./User";
 
 // ObjectType convert class to graphQl type and to use it in resolvers
 @ObjectType()
 //decorator mikroOrm this is entitiy, a database table
 @Entity()
-export class Post {
+export class Post extends BaseEntity{
 
   // field expose to our graphQl schema
   @Field()
-  @PrimaryKey()
+  @PrimaryGeneratedColumn()
   id!: number;
 
-  @Field(() => String)
-  @Property({type:'date'})
-  createdAt = new Date();
-
-  @Field(() => String)
-  @Property({ type:'date', onUpdate: () => new Date() })
-  updatedAt = new Date();
 
   @Field()
   //decorator database column, if remove just a field of a class;
-  @Property({type:'text'})
+  @Column()
   title!: string;
+
+  @Field()
+  //decorator database column, if remove just a field of a class;
+  @Column()
+  text!: string;
+
+  @Field()
+  //decorator database column, if remove just a field of a class;
+  @Column({type: "int", default:0})
+  points!: number;
+  
+  @Field()
+  @Column()
+  creatorId: number;
+
+  @ManyToOne(() => User, user => user.posts)
+  creator: User;
+
+  @Field(() => String)
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Field(() => String)
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
