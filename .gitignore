@@ -2,8 +2,16 @@
 
 # dependencies
 lireddit-web/node_modules
+lireddit-web/.next
+lireddit-web/.vscode
 lireddit-web/.pnp
 lireddit-web/.pnp.js
+lireddit-web/package-lock.json
+
+lireddit-server/node_modules
+lireddit-server/dist
+lireddit-server/package-lock.json
+
 
 # testing
 /coverage
