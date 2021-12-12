@@ -20,6 +20,7 @@ import { Post } from './entities/Post';
 import path from "path";
 
 const main = async () => {
+    // console.log('dir: ',__dirname)
     const conn = await createConnection({
         type: 'postgres',
         database: 'lireddit2',
@@ -31,7 +32,8 @@ const main = async () => {
         entities:[Post, User]
     });
 
-    await conn.runMigrations()
+    await conn.runMigrations();
+    // await Post.delete({});
     const app = express();
     const RedisStore = connectRedis(session)
     const redis = new Redis()

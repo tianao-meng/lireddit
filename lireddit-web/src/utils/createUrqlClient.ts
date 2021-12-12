@@ -1,6 +1,6 @@
-import { cacheExchange } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
 import Router from 'next/router';
-import { dedupExchange, Exchange, fetchExchange } from 'urql';
+import { dedupExchange, Exchange, fetchExchange, stringifyVariables } from 'urql';
 import { pipe, tap } from 'wonka';
 import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
@@ -19,11 +19,118 @@ export const errorExchange: Exchange = ({ forward }) => ops$ => {
     })
   );
 };
+export const cursorPagination = ():Resolver =>  {
+
+
+  return (_parent, fieldArgs, cache, info) => {
+    const { parentKey: entityKey, fieldName } = info;
+
+    console.log('graphQl Type: ', entityKey)
+    const allQueries = cache.inspectFields(entityKey);
+    console.log('allQueries: ', allQueries);
+
+    const selectedQueryArr = allQueries.filter(info => info.fieldName === fieldName);
+    const size = selectedQueryArr.length;
+    if (size === 0) {
+      return undefined;
+    }
+    console.log('selectedQueryArr: ', selectedQueryArr)
+
+    console.log('fieldArgs: ', fieldArgs);
+    const returnObj = `${entityKey}.${fieldName}(${stringifyVariables(fieldArgs)})`;
+    console.log('returnObj: ', returnObj);
+    const isItInTheCache = cache.resolve(returnObj, 'posts');
+    console.log('isItInTheCache: ', isItInTheCache);
+    info.partial = !isItInTheCache;
+
+
+    const result:string[] = [];
+    let hasMore = false;
+    selectedQueryArr.forEach((selectedQuery) => { 
+      // const key = cache.resolveFieldByKey(entityKey, selectedQuery.fieldKey) as string;
+      // console.log('selectedQuery: ', selectedQuery);
+      const returnObj = `${entityKey}.${fieldName}(${stringifyVariables(selectedQuery.arguments)})`;
+      // console.log('returnObj: ', returnObj)
+      const data = cache.resolve(returnObj, 'posts') as string[]
+      hasMore = cache.resolve(returnObj, 'hasMore') as boolean
+      console.log('data: ', data)
+      result.push(...data);
+    })
+    console.log(result);
+
+
+    return {
+      __typename: 'PaginatedPosts',
+      posts:result,
+      hasMore: hasMore
+    };
+
+    // const visited = new Set();
+    // let result: NullArray<string> =  [];
+    // let prevOffset: number | null = null;
+
+    // for (let i = 0; i < size; i++) {
+    //   const { fieldKey, arguments: args } = fieldInfos[i];
+    //   if (args === null || !compareArgs(fieldArgs, args)) {
+    //     continue;
+    //   }
+
+    //   const links = cache.resolve(entityKey, fieldKey) as string[];
+    //   const currentOffset = args[cursorArgument];
+
+    //   if (
+    //     links === null ||
+    //     links.length === 0 ||
+    //     typeof currentOffset !== 'number'
+    //   ) {
+    //     continue;
+    //   }
+
+    //   const tempResult: NullArray<string> = [];
+
+    //   for (let j = 0; j < links.length; j++) {
+    //     const link = links[j];
+    //     if (visited.has(link)) continue;
+    //     tempResult.push(link);
+    //     visited.add(link);
+    //   }
+
+    //   if (
+    //     (!prevOffset || currentOffset > prevOffset) ===
+    //     (mergeMode === 'after')
+    //   ) {
+    //     result = [...result, ...tempResult];
+    //   } else {
+    //     result = [...tempResult, ...result];
+    //   }
+
+    //   prevOffset = currentOffset;
+    // }
+
+    // const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
+    // if (hasCurrentPage) {
+    //   return result;
+    // } else if (!(info as any).store.schema) {
+    //   return undefined;
+    // } else {
+    //   info.partial = true;
+    //   return result;
+    // }
+  };
+};
 
 export const createUrqlClient = (ssrExchange:any) => (
         {
             url: 'http://localhost:4000/graphql',
             exchanges: [dedupExchange, cacheExchange({
+              keys:{
+                PaginatedPosts: () => null
+              },
+              resolvers:{
+                Query: {
+                  posts: cursorPagination()
+                }
+              },
               updates:{
                 Mutation: {
                   logout:(_result, args, cache, info) => {

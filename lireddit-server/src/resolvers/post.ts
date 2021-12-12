@@ -1,6 +1,6 @@
 
 import { Post } from "../entities/Post";
-import { Arg,  Ctx,  Field,  InputType,  Int, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg,  Ctx,  Field,  FieldResolver,  InputType,  Int, Mutation, ObjectType, Query, Resolver, Root, UseMiddleware } from "type-graphql";
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
@@ -16,28 +16,45 @@ class PostInput {
     text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+    @Field(() => [Post])
+    posts: Post[];
 
-@Resolver()
+    @Field()
+    hasMore: boolean;
+}
+
+
+@Resolver(Post)
 export class PostResolver {
+
+    @FieldResolver(() => String)
+    textSnippet(@Root() root: Post){
+        return root.text.slice(0, 50);
+    }
+
     //graph ql pass Post type
-    @Query(() => [Post])
+    @Query(() => PaginatedPosts)
     // typescript type
     // there r some duplication in typegraphQl
-    posts(
+    async posts(
         @Arg('limit', () => Int) limit: number,
         @Arg('cursor', () => String, {nullable: true}) cursor: string | null,
-    ): Promise<Post[]>{
+    ): Promise<PaginatedPosts>{
         const realLimit = Math.min(50, limit);
+        const realLimitPlusOne = Math.min(50, limit) + 1;
         const qb = getConnection() 
         .getRepository(Post)
         .createQueryBuilder("p")
         .orderBy('"createdAt"',"DESC")
-        .take(realLimit)
+        .take(realLimitPlusOne)
     
         if (cursor){
             qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) })
         }
-        return qb.getMany();
+        const posts = await qb.getMany()
+        return {posts:posts.slice(0, realLimit) , hasMore:posts.length === realLimitPlusOne};
     }
 
     @Query(() => Post, {nullable: true})
