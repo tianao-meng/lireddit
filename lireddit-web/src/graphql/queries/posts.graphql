@@ -4,16 +4,8 @@ query Posts($limit: Int!, $cursor: String){
     cursor:$cursor,
   ){
     hasMore
-    posts{
-      id
-      createdAt
-      updatedAt
-      title
-      textSnippet
-      creator{
-        id
-        username
-      }
+    posts {
+      ...PostSnippet
     }
   }
 }

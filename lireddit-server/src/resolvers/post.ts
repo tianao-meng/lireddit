@@ -4,7 +4,7 @@ import { Arg,  Ctx,  Field,  FieldResolver,  InputType,  Int, Mutation, ObjectTy
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
-import { Updoot } from "../entities/Updoot";
+import { Updoot } from "src/entities/Updoot";
 
 
 
@@ -43,24 +43,39 @@ export class PostResolver {
         @Ctx() {req}: MyContext
     ){
 
+
         const isUpdoot = value !== -1;
         const realValue = isUpdoot ? 1 : -1;
         const userId = req.session.userId;
+
+        const updoot = await Updoot.findOne({where: {postId, userId}});
+
+        if(updoot && updoot.value !== realValue){
+
+        } else if(!updoot){
+            
+        }
         // await Updoot.insert({
         //     userId,
         //     postId,
         //     value:realValue
         // });
+        console.log('postId: ', postId);
+        console.log('value: ', value);
+        console.log('userId: ', userId);
 
         await getConnection().query(`
-        START TRANSACTION
-        insert into updoot ("userId", "postId", "value")
-        values ($1, $2, $3)
+        START TRANSACTION;
+
+        insert into updoot ("userId", "postId", value)
+        values (${userId}, ${postId}, ${realValue});
+
         update post
-        set points = points + $3
-        where id = $4
-        COMMIT
-        `,[userId, postId, realValue, postId]);
+        set points = points + ${realValue}
+        where id = ${postId};
+
+        COMMIT;
+        `)
 
         return true;
 

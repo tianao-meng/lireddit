@@ -298,7 +298,7 @@ export class MockPosts1639272963537 implements MigrationInterface {
         `)
     }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
+    public async down(_: QueryRunner): Promise<void> {
     }
 
 }
