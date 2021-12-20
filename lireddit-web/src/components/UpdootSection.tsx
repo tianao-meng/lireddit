@@ -14,19 +14,26 @@ interface UpdootSectionProps {
 export const UpdootSection: React.FC<UpdootSectionProps> = ({post}) => {
         const [loadingState, setLoadingState] = useState<'updoot-loading' | 'downdoot-loading' | 'not-loading'>('not-loading')
         const [_, vote] = useVoteMutation();
+        // console.log('post: ', post)
         return (
             <Flex direction='column' alignItems='center' justifyContent='center' mr={4}>
                 <IconButton onClick={async () => {
+                    if(post.voteStatus === 1){
+                        return;
+                    }
                     setLoadingState('updoot-loading');
                     await vote({postId: post.id, value:1});
                     setLoadingState('not-loading');
-                }} aria-label='updoots post' icon={<ChevronUpIcon/>} colorScheme='teal' fontSize='24px' isLoading={loadingState === 'updoot-loading'}/>
+                }} aria-label='updoots post' icon={<ChevronUpIcon/>} colorScheme={post.voteStatus === 1 ? 'teal' : undefined} fontSize='24px' isLoading={loadingState === 'updoot-loading'}/>
                 {post.points}
                 <IconButton onClick={async () => {
+                    if(post.voteStatus === -1){
+                        return;
+                    }
                     setLoadingState('downdoot-loading');
                     vote({postId:post.id, value:-1})
                     setLoadingState('not-loading'); 
-                }} aria-label='downdoots post' icon={<ChevronDownIcon/>} colorScheme='teal' fontSize='24px' isLoading={loadingState === 'downdoot-loading'}/>
+                }} aria-label='downdoots post' icon={<ChevronDownIcon/>} colorScheme={post.voteStatus === -1 ? 'red' : undefined} fontSize='24px' isLoading={loadingState === 'downdoot-loading'}/>
 
             </Flex>
         );

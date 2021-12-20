@@ -2,8 +2,10 @@ import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
 import Router from 'next/router';
 import { dedupExchange, Exchange, fetchExchange, stringifyVariables } from 'urql';
 import { pipe, tap } from 'wonka';
-import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation } from '../generated/graphql';
+import { gql } from '@urql/core';
+import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
+import { isServer } from './isServer';
 
 export const errorExchange: Exchange = ({ forward }) => ops$ => {
   return pipe(
@@ -25,22 +27,22 @@ export const cursorPagination = ():Resolver =>  {
   return (_parent, fieldArgs, cache, info) => {
     const { parentKey: entityKey, fieldName } = info;
 
-    console.log('graphQl Type: ', entityKey)
+    // console.log('graphQl Type: ', entityKey)
     const allQueries = cache.inspectFields(entityKey);
-    console.log('allQueries: ', allQueries);
+    // console.log('allQueries: ', allQueries);
 
     const selectedQueryArr = allQueries.filter(info => info.fieldName === fieldName);
     const size = selectedQueryArr.length;
     if (size === 0) {
       return undefined;
     }
-    console.log('selectedQueryArr: ', selectedQueryArr)
+    // console.log('selectedQueryArr: ', selectedQueryArr)
 
-    console.log('fieldArgs: ', fieldArgs);
+    // console.log('fieldArgs: ', fieldArgs);
     const returnObj = `${entityKey}.${fieldName}(${stringifyVariables(fieldArgs)})`;
-    console.log('returnObj: ', returnObj);
+    // console.log('returnObj: ', returnObj);
     const isItInTheCache = cache.resolve(returnObj, 'posts');
-    console.log('isItInTheCache: ', isItInTheCache);
+    // console.log('isItInTheCache: ', isItInTheCache);
     info.partial = !isItInTheCache;
 
 
@@ -53,10 +55,10 @@ export const cursorPagination = ():Resolver =>  {
       // console.log('returnObj: ', returnObj)
       const data = cache.resolve(returnObj, 'posts') as string[]
       hasMore = cache.resolve(returnObj, 'hasMore') as boolean
-      console.log('data: ', data)
+      // console.log('data: ', data)
       result.push(...data);
     })
-    console.log(result);
+    // console.log(result);
 
 
     return {
@@ -119,7 +121,12 @@ export const cursorPagination = ():Resolver =>  {
   };
 };
 
-export const createUrqlClient = (ssrExchange:any) => (
+export const createUrqlClient = (ssrExchange:any, ctx:any) => {
+  let cookie = '';
+  if(isServer()){
+    cookie = ctx.req.headers.cookie;
+  }
+  return(
         {
             url: 'http://localhost:4000/graphql',
             exchanges: [dedupExchange, cacheExchange({
@@ -133,6 +140,40 @@ export const createUrqlClient = (ssrExchange:any) => (
               },
               updates:{
                 Mutation: {
+                  vote:(_result, args, cache, info) => {
+                    
+                    
+                    
+                    const data = cache.readFragment(
+                      gql`
+                        fragment _ on Post{
+                          id
+                          points
+                          voteStatus
+                        }
+                      `,
+                      { id: args.postId } 
+                    );
+                    // console.log('data, args: ', data, args);
+                    
+                    if(data){
+                      if(data.voteStatus === args.value){
+                        return;
+                      }
+                      const newPoints = (data.points) + ((!data.voteStatus ? 1 : 2) * (args.value as number));
+                      cache.writeFragment(
+                        gql`
+                          fragment _ on Post {
+                            points
+                            voteStatus
+                          }
+                        `,
+                        { id: args.postId, points: newPoints, voteStatus:args.value }
+                      );
+                    }
+ 
+                  },
+
                   createPost: (_result, args, cache, info) => {
                     const allQueries = cache.inspectFields('Query');
                 
@@ -181,7 +222,11 @@ export const createUrqlClient = (ssrExchange:any) => (
             }),errorExchange, ssrExchange, fetchExchange],
             
             fetchOptions:{
-              credentials:"include" as const
+              credentials:"include" as const,
+              headers: cookie ? {
+                cookie
+              } : undefined
             }
       }
-)
+  )
+}
