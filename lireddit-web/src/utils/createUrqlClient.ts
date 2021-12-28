@@ -3,7 +3,7 @@ import Router from 'next/router';
 import { dedupExchange, Exchange, fetchExchange, stringifyVariables } from 'urql';
 import { pipe, tap } from 'wonka';
 import { gql } from '@urql/core';
-import { LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from '../generated/graphql';
+import { DeletePostMutationVariables, LoginMutation, LogoutMutation, MeDocument, MeQuery, RegisterMutation, VoteMutationVariables } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import { isServer } from './isServer';
 
@@ -124,7 +124,7 @@ export const cursorPagination = ():Resolver =>  {
 export const createUrqlClient = (ssrExchange:any, ctx:any) => {
   let cookie = '';
   if(isServer()){
-    cookie = ctx.req.headers.cookie;
+    cookie = ctx?.req?.headers?.cookie;
   }
   return(
         {
@@ -140,10 +140,10 @@ export const createUrqlClient = (ssrExchange:any, ctx:any) => {
               },
               updates:{
                 Mutation: {
+                  deletePost: (_result, args, cache, info) => {
+                    cache.invalidate({__typename:'Post', id: (args as DeletePostMutationVariables).id})
+                  },
                   vote:(_result, args, cache, info) => {
-                    
-                    
-                    
                     const data = cache.readFragment(
                       gql`
                         fragment _ on Post{
