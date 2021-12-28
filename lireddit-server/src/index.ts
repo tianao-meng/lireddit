@@ -19,6 +19,8 @@ import { User } from './entities/User';
 import { Post } from './entities/Post';
 import path from "path";
 import { Updoot } from "./entities/Updoot";
+import { createUserLoader } from "./utils/createUserLoader";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
 
 const main = async () => {
     // console.log('dir: ',__dirname)
@@ -69,7 +71,7 @@ const main = async () => {
             validate:false,
         }),
         // context is a special object, that can be accessed by our resolvers
-        context:({req, res}): MyContext => ({req, res, redis}),
+        context:({req, res}): MyContext => ({req, res, redis, userLoader: createUserLoader(), updootLoader: createUpdootLoader()}),
         plugins: [
             ApolloServerPluginLandingPageGraphQLPlayground({
               // options
