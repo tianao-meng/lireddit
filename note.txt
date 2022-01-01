@@ -1,0 +1,15 @@
+use dokku to communicate with VPS(digitalocean), matain postgres and redis in container.
+dockerize the backend, and push to docker hub;
+then pull from VPS and deployed to prod;
+
+get domain name in namecheap to avoid some cookie forwarding problems.
+whatsmydns check domain name effective in different region.
+gen-env-types set env vars
+dokku-letsencrypt make call backend api using https
+use vercel to deploy front end, seperate from vps.
+switch to apollo client(code gen TypeScript React Apollo, ssr:next-apollo,@apollo/client )
+
+
+
+digitalocean -> dokku -> dockeriing app(Dockerizing a Node.js web app, dockerhub) -> env(dotenvsafe, gen-env-types) -> dns(name cheap) -> deploy backend -> deploy front end(vercel)
+->switch to apollo client(code gen TypeScript React Apollo, ssr:next-apollo,@apollo/client )
