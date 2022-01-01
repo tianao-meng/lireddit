@@ -10,6 +10,7 @@ lireddit-web/package-lock.json
 
 lireddit-server/node_modules
 lireddit-server/dist
+lireddit-server/.env
 lireddit-server/package-lock.json
 
 
