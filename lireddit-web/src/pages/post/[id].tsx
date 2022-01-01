@@ -5,11 +5,12 @@ import { Layout } from '../../components/Layout';
 import { Box, Heading } from '@chakra-ui/layout';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 import { EditDeletePostButtons } from '../../components/EditDeletePostButtons';
+import { withApollo } from '../../utils/withApollo';
 
 export const Post = ({}) => {
 
-    const [{data, fetching}] = useGetPostFromUrl();
-    if(fetching){
+    const {data, loading} = useGetPostFromUrl();
+    if(loading){
         return(
             <Layout>loading ...</Layout>
         )
@@ -35,4 +36,4 @@ export const Post = ({}) => {
     );
 }
 
-export default withUrqlClient(createUrqlClient, {ssr:true})(Post)
+export default withApollo({ssr: true})(Post);

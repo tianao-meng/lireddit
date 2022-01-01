@@ -1,4 +1,4 @@
-import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
 import Router from 'next/router';
 import { dedupExchange, Exchange, fetchExchange, stringifyVariables } from 'urql';
 import { pipe, tap } from 'wonka';
@@ -66,69 +66,29 @@ export const cursorPagination = ():Resolver =>  {
       posts:result,
       hasMore: hasMore
     };
-
-    // const visited = new Set();
-    // let result: NullArray<string> =  [];
-    // let prevOffset: number | null = null;
-
-    // for (let i = 0; i < size; i++) {
-    //   const { fieldKey, arguments: args } = fieldInfos[i];
-    //   if (args === null || !compareArgs(fieldArgs, args)) {
-    //     continue;
-    //   }
-
-    //   const links = cache.resolve(entityKey, fieldKey) as string[];
-    //   const currentOffset = args[cursorArgument];
-
-    //   if (
-    //     links === null ||
-    //     links.length === 0 ||
-    //     typeof currentOffset !== 'number'
-    //   ) {
-    //     continue;
-    //   }
-
-    //   const tempResult: NullArray<string> = [];
-
-    //   for (let j = 0; j < links.length; j++) {
-    //     const link = links[j];
-    //     if (visited.has(link)) continue;
-    //     tempResult.push(link);
-    //     visited.add(link);
-    //   }
-
-    //   if (
-    //     (!prevOffset || currentOffset > prevOffset) ===
-    //     (mergeMode === 'after')
-    //   ) {
-    //     result = [...result, ...tempResult];
-    //   } else {
-    //     result = [...tempResult, ...result];
-    //   }
-
-    //   prevOffset = currentOffset;
-    // }
-
-    // const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-    // if (hasCurrentPage) {
-    //   return result;
-    // } else if (!(info as any).store.schema) {
-    //   return undefined;
-    // } else {
-    //   info.partial = true;
-    //   return result;
-    // }
   };
 };
+
+function invalidateAllPosts(cache: Cache) {
+
+  const allQueries = cache.inspectFields('Query');
+                
+  const selectedQueryArr = allQueries.filter(info => info.fieldName === 'posts');
+  selectedQueryArr.forEach((selectedQuery)=> {
+    cache.invalidate('Query', 'posts', selectedQuery.arguments);
+  })
+
+}
 
 export const createUrqlClient = (ssrExchange:any, ctx:any) => {
   let cookie = '';
   if(isServer()){
     cookie = ctx?.req?.headers?.cookie;
   }
+  console.log('API URL: ', process.env.NEXT_PUBLIC_API_URL);
   return(
         {
-            url: 'http://localhost:4000/graphql',
+            url: process.env.NEXT_PUBLIC_API_URL as string,
             exchanges: [dedupExchange, cacheExchange({
               keys:{
                 PaginatedPosts: () => null
@@ -175,12 +135,7 @@ export const createUrqlClient = (ssrExchange:any, ctx:any) => {
                   },
 
                   createPost: (_result, args, cache, info) => {
-                    const allQueries = cache.inspectFields('Query');
-                
-                    const selectedQueryArr = allQueries.filter(info => info.fieldName === 'posts');
-                    selectedQueryArr.forEach((selectedQuery)=> {
-                      cache.invalidate('Query', 'posts', selectedQuery.arguments);
-                    })
+                    invalidateAllPosts(cache);
                   },
                   logout:(_result, args, cache, info) => {
                     betterUpdateQuery<LogoutMutation, MeQuery>(cache, {query: MeDocument}, _result, (result, query) => {
@@ -202,6 +157,7 @@ export const createUrqlClient = (ssrExchange:any, ctx:any) => {
                         }
                       }
                     })
+                    invalidateAllPosts(cache);
           
                   },
                   register: (_result, args, cache, info) => {

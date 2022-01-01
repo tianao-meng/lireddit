@@ -6,15 +6,18 @@ import React, { useState } from "react";
 import { EditDeletePostButtons } from "../components/EditDeletePostButtons";
 import { Layout } from "../components/Layout";
 import { UpdootSection } from "../components/UpdootSection";
-import { useMeQuery, usePostsQuery } from "../generated/graphql";
+import { PostsQuery, useMeQuery, usePostsQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
+import { withApollo } from "../utils/withApollo";
 const Index = () => {
-  const [variables, setVariables] = useState({limit: 10, cursor: null as null | string});
-  console.log('variables', variables)
-  const [{data, fetching}] = usePostsQuery({variables});
+  const {data, loading, fetchMore, variables} = usePostsQuery({
+    variables: {limit: 10, cursor: null},
+    notifyOnNetworkStatusChange:true,
+  });
+  // console.log('data; ',data);
 
 
-  if(!fetching && !data){
+  if(!loading && !data){
     return <div>you got no data for some reason</div>
   }
   return (
@@ -22,7 +25,7 @@ const Index = () => {
 
       
 
-        {(!data && fetching) ? 
+        {(!data && loading) ? 
           <div>loading...</div>: 
           <Stack spacing={8}>
             {data!.posts.posts.map(p => 
@@ -56,11 +59,30 @@ const Index = () => {
           <Flex>
 
             <Button onClick={() => {
-              setVariables({
-                limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt
+              fetchMore({
+                variables: {
+                  limit: variables?.limit,
+                  cursor: data.posts.posts[data.posts.posts.length - 1].createdAt
+                },
+                // updateQuery: (previousValue, {fetchMoreResult}):PostsQuery => {
+                //   if(!fetchMoreResult){
+                //     return previousValue as PostsQuery;
+                //   }
+                //   return {
+                //     __typename: 'Query', 
+                //     posts:{
+                //       __typename:'PaginatedPosts',
+                //       hasMore: (fetchMoreResult  as PostsQuery).posts.hasMore,
+                //       posts:[
+                //         ...(previousValue as PostsQuery).posts.posts,
+                //         ...(fetchMoreResult as PostsQuery).posts.posts,
+                //       ]
+                //     }
+                //   } 
+                // }
               })
-            }} isLoading={fetching} m='auto' my={8}>Load more</Button>
+
+            }} isLoading={loading} m='auto' my={8}>Load more</Button>
           </Flex>
           : null
         }
@@ -71,4 +93,4 @@ const Index = () => {
   )
 }
 
-export default withUrqlClient(createUrqlClient, {ssr:true})(Index)
+export default withApollo({ssr: true})(Index)
