@@ -6,7 +6,7 @@ import { Input } from '@chakra-ui/input'
 import Wrapper from '../components/Wrapper'
 import { InputField } from '../components/InputField'
 import { Box } from '@chakra-ui/layout'
-import { Button } from "@chakra-ui/react"
+import { Button, Flex } from "@chakra-ui/react"
 import { useMutation } from 'urql'
 import { MeDocument, MeQuery, useRegisterMutation } from '../generated/graphql'
 import { toErrorMap } from '../utils/toErrorMap'
@@ -56,7 +56,10 @@ const Register: React.FC<registerProps> = ({}) => {
                                                         <Box mt={4}>
                                                                 <InputField name= "password" label= "Password" placeholder= "password" type='password'/>
                                                         </Box>
-                                                        <Button mt={4} type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Reigster</Button>
+                                                        <Flex mt={4} justifyContent='center'>
+
+                                                                <Button type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Reigster</Button>
+                                                        </Flex>
 
                                                 </Form>
                                         )

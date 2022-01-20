@@ -60,7 +60,9 @@ const Login: React.FC<{}> = ({}) => {
                                                                 <Link ml="auto">Forgot Password</Link>
                                                             </NextLink>                                                        
                                                         </Flex>
-                                                        <Button mt={4} type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Login</Button>
+                                                        <Flex  mt={4} justifyContent='center'>
+                                                                <Button type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Login</Button>
+                                                        </Flex>
 
                                                 </Form>
                                         )

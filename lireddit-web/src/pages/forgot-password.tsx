@@ -25,7 +25,10 @@ const forgotPassword: React.FC<{}> = ({}) => {
 
                                             <Form>
                                                     <InputField name= "email" label= "Email" type="email" placeholder= "Please your email"/>
-                                                    <Button mt={4} type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Submit</Button>
+                                                    <Flex mt={4} justifyContent='center'>
+
+                                                        <Button type="submit" colorScheme="teal" isLoading={isSubmitting} color="white">Submit</Button>
+                                                    </Flex>
 
                                             </Form>
                                     )
