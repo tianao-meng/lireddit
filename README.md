@@ -1,4 +1,4 @@
-# ChatApp
+# LIREDDIT
 •	This project is a web app like reddit achieving user authentication and CRUD operation for posts.
 •	The purpose of this project is to get familar with using typescript for development and graphQL server.
 
